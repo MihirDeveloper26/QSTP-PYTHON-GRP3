@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
 
 import pygame
 from pygame import *
@@ -10,7 +8,7 @@ import sys
 from os.path import abspath, dirname
 from random import choice
 
-#Initializing pygame modules
+# Initializing pygame modules
 width = 1024
 height = 720
 pygame.mixer.init(22100, -16, 2, 64)
@@ -20,31 +18,43 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Space Invaders")
 
 
-
-#Initialize required Variables here
+# Initialize required Variables here
 
 spaceship = pygame.image.load("spaceship.png")
 spaceship = pygame.transform.scale(spaceship, (120, 120))
 alienship = pygame.image.load("alienface.png")
-alienship = pygame.transform.scale(alienship, (90,90))
-sw = display.get_width() 
+alienship = pygame.transform.scale(alienship, (90, 90))
+heart = pygame.image.load("lives.jpg")
+heart = pygame.transform.scale(heart, (50,30))
+sw = display.get_width()
 sh = display.get_height()
-x_increment = 30 
+x_increment = 30
 ship_height = spaceship.get_height()
 ship_width = spaceship.get_width()
 spaceship_y = sh - spaceship.get_height()
 spaceship_x = sw/2 - spaceship.get_width()/2
-alien_speed = 4
-global score,highest_score
+alien_speed = 3
+global score, highest_score
 draw_state = 0
 score = 0
+lost = False
+lives = 3
+level = 1
 
-shoot_sound = pygame.mixer.Sound("shoot.ogg")
+shoot_sound = pygame.mixer.Sound("shooter.ogg")
 shoot_sound.set_volume(0.8)
 
-#COLORS IN RGB YOU CAN MAKE COMBINATIONS LATER
+fire_sound = pygame.mixer.Sound("shoot.ogg")
+fire_sound.set_volume(0.8)
+
+explode_sound = pygame.mixer.Sound("explosion.ogg")
+explode_sound.set_volume(0.8)
+
+
+# COLORS IN RGB YOU CAN MAKE COMBINATIONS LATER
 
 background = (74, 35, 90)
+red = (255, 0, 0)
 white = (244, 246, 247)
 yellow = (241, 196, 15)
 orange = (186, 74, 0)
@@ -52,13 +62,14 @@ green = (35, 155, 86)
 white1 = (253, 254, 254)
 dark_gray = (23, 32, 42)
 green = (0, 255, 0)
-blue = ( 0, 0, 255)
-gold=( 230, 215, 0)
+blue = (0, 0, 255)
+gold = (230, 215, 0)
+black = (100, 100, 100)
 
 font = pygame.font.SysFont("verdana", 22)
 myfont = pygame.font.SysFont('verdana', 50)
 resetFont = pygame.font.SysFont('Comic Sans MS', 30)
-myfont_win=pygame.font.SysFont('Times New Roman', 80)
+myfont_win = pygame.font.SysFont('Times New Roman', 80)
 
 try:
     #       the highest score recorded. This is not erased when game is
@@ -68,11 +79,10 @@ try:
     highest_score = int(highest_score_file.read())
     highest_score_file.close()
 except:
-    highest_score=0
+    highest_score = 0
 
 
-
-#Main Space Shuttle to shoot the alien ships
+# Main Space Shuttle to shoot the alien ships
 
 class SpaceShip:
     def __init__(self, x, y, w, h):
@@ -87,7 +97,7 @@ class SpaceShip:
         display.blit(spaceship, (spaceship_x, spaceship_y))
 
 
-# The bullet that has to be shot 
+# The bullet that has to be shot
 
 class Bullet:
     def __init__(self, x, y):
@@ -97,7 +107,7 @@ class Bullet:
         self.speed = -5
 
     def draw(self):
-        pygame.draw.ellipse(display, orange , (self.x, self.y, self.d, self.d))
+        pygame.draw.ellipse(display, orange, (self.x, self.y, self.d, self.d))
 
     def move(self):
         self.y += self.speed
@@ -107,10 +117,11 @@ class Bullet:
             if y + d > self.y > y:
                 return True
 
-# Alien Battleship Movement 
+# Alien Battleship Movement
+
 
 class Alien:
-    def __init__(self, x, y, d,speed):
+    def __init__(self, x, y, d, speed):
         self.x = x
         self.y = y
         self.d = d
@@ -120,8 +131,7 @@ class Alien:
     def draw(self):
         alienship_x = self.x
         alienship_y = self.y
-        display.blit(alienship,(alienship_x, alienship_y))
-
+        display.blit(alienship, (alienship_x, alienship_y))
 
     def move(self):
         self.x += self.x_dir*self.speed
@@ -130,36 +140,62 @@ class Alien:
         self.y += self.d
 
 
-
 def saved():
     # Result Declaration of the game
     font = pygame.font.SysFont("verdana", 22)
     font_large = pygame.font.SysFont("verdana", 43)
-    text2 = font_large.render("Congo,finally you aced at something!", True, white1)
+    text2 = font_large.render(
+        "Congo,finally you aced at something!", True, white1)
     display.blit(text2, (60, height/2))
     pygame.display.update()
 
 
-
 def GameOver():
     # Game over Recognition
-
+    global alien_speed
+    global score
+    global lives
+    global lost
+    display.fill(white1)
     font = pygame.font.SysFont("verdana", 50)
     font_large = pygame.font.SysFont("verdana", 100)
-    text2 = font_large.render("Game Over!", True, white1)
-    text = font.render("You Lost! You Suck!", True, white1)
-    display.blit(text2, (180, height/2-50))
-    display.blit(text, (45, height/2 + 100))
+    myfont = pygame.font.SysFont('verdana', 22)
+    text2 = font_large.render("Game Over!", True, black)
+    text = font.render("You Lost! You Suck!", True, black)
+    text3 = myfont.render('Press RETURN*', False, red)
+    display.blit(text2, (250, 250))
+    display.blit(text, (280, 400))
+    display.blit(text3, (0, 0))
+    alien_speed = 3
+    score = 0
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                score = 0
+                alien_speed = 3
+                lives = 3
+                lost = False
+                reset_game()
+    pygame.display.update()
 
-#Main Code for the Game Screen
+
+def reset_game():
+    global lost
+    global score
+    alien_mov()
+    game()
+
 
 def increase_level():
-    pass
     global alien_speed
-    alien_speed += 1
-    alien_mov()
+    global invasion
+    global level
+    if alien_speed < 7:
+    	alien_speed += 1
+    	level += 1
+    invasion = False
+    game()
 
-    
 
 def alien_mov():
     global aliens
@@ -175,41 +211,39 @@ def alien_mov():
         i = Alien((i+1)*d + i*20, 80, d, alien_speed)
         aliens.append(i)
 
+
 def welcome_message():
 
     global quit, draw_state
 
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
 
-    mouse=pygame.mouse.get_pos()  
-    click=pygame.mouse.get_pressed()
-    
-    
     display.fill(dark_gray)
-    
-    
-    textsurface=myfont_win.render('Space Invaders', False, gold)
-    display.blit(textsurface, (300, 200))    
+
+    textsurface = myfont_win.render('Space Invaders', False, gold)
+    display.blit(textsurface, (300, 200))
 
     if mouse[0] < 540 and mouse[0] > 390 and mouse[1] < 480 and mouse[1] > 400:
-        pygame.draw.rect(display, green,(440,400,140,70))
-        if click[0]: 
-           draw_state += 1
-           game() 
-    else: 
-        pygame.draw.rect(display,blue,(440,400,140,70))
-
+        pygame.draw.rect(display, green, (440, 400, 140, 70))
+        if click[0]:
+            draw_state += 1
+            game()
+    else:
+        pygame.draw.rect(display, blue, (440, 400, 140, 70))
 
     textsurface = myfont.render('PLAY', False, white)
-    display.blit(textsurface,(440,400)) 
+    display.blit(textsurface, (440, 400))
 
-green
+
 def game():
     global invasion
     invasion = False
-    ship = SpaceShip(width/2-ship_width /2, height- ship_height , ship_width, ship_height)
+    ship = SpaceShip(width/2-ship_width / 2, height -
+                     ship_height, ship_width, ship_height)
     move = False
-    global score,highest_score
-
+    global score, highest_score
+    global lives, level
     global bullets
     bullets = []
     global num_bullet
@@ -219,14 +253,16 @@ def game():
         bullets.append(i)
 
     x_move = 0
-    
+
     global aliens
     global num_aliens
     global d
+    global lost
     aliens = []
     num_aliens = 8
     d = 50
     alien_mov()
+    lost = False
 
     while not invasion:
         for event in pygame.event.get():
@@ -250,33 +286,42 @@ def game():
                     move = True
 
                 if event.key == pygame.K_SPACE:
+
                     num_bullet += 1
                     i = Bullet(ship.x + ship_width/2 - 5, ship.y)
                     bullets.append(i)
-                    
+                    pygame.mixer.Sound.play(fire_sound)
+                    pygame.mixer.music.stop()
 
         display.fill(white1)
 
         textsurface = font.render('Score:', False, green)
-        display.blit(textsurface,(0,0))
+        display.blit(textsurface, (0, 0))
         textsurface = font.render(str(score), True, green)
-        display.blit(textsurface,(72,0))
-        
-        textsurface = font.render('High Score: ', False, green)
-        display.blit(textsurface,(840,0)) 
+        display.blit(textsurface, (72, 0))
 
-        textsurface = font.render(str(highest_score), True, green)
-        display.blit(textsurface,(980,0))
-        
-        textsurface = font.render('Level:', False, green)
-        display.blit(textsurface,(480,0))
-        textsurface = font.render(str(int(score/80)+ 1), True, green)
-        display.blit(textsurface,(550,0))
+        textsurface = font.render('High Score: ', False, blue)
+        display.blit(textsurface, (840, 0))
+
+        textsurface = font.render(str(highest_score), True, blue)
+        display.blit(textsurface, (980, 0))
+
+        textsurface = font.render('Level:', False, black)
+        display.blit(textsurface, (480, 0))
+        textsurface = font.render(str(level), True, black)
+        display.blit(textsurface, (550, 0))
+
+        for i in range(lives):
+        	if i == 0:
+        		display.blit(heart,(0, 40))
+        	elif i == 1:
+        		display.blit(heart, (43, 40))
+        	elif i == 2:
+        		display.blit(heart, (86, 40))
 
         for i in range(num_bullet):
             bullets[i].draw()
             bullets[i].move()
-
 
         for alien in list(aliens):
             alien.draw()
@@ -290,7 +335,6 @@ def game():
                     aliens.remove(alien)
                     num_aliens -= 1
                     score += 10
-
         if score > highest_score:
             highest_score = score
             highest_score_file = open("highscore.txt", "w")
@@ -301,8 +345,6 @@ def game():
             increase_level()
             num_bullet = 0
             bullets = []
-
-
 
         for i in range(num_aliens):
             if aliens[i].x + d >= width:
@@ -316,43 +358,46 @@ def game():
                     aliens[j].shift_down()
 
         try:
-            if aliens[0].y + d > height:
-                GameOver()
+            if aliens[0].y + d + 95 > height:
+                if lives > 0:
+                    pygame.mixer.Sound.play(explode_sound)
+                    pygame.mixer.music.stop()
+                    lives -= 1
+                # pygame.mixer.Sound.play(explode_sound)
+                # pygame.mixer.music.stop()
+                #lives -= 1
+                if lives < 1:
+                	
+                    GameOver()
+                    lost = True
+                else:
+                    reset_game()
                 pygame.display.update()
-                #invasion = True
         except Exception as e:
             pass
-        
-
-        
 
         if ship.x < 0:
             ship.x -= x_move
         if ship.x + ship_width > width:
             ship.x -= x_move
-
-        ship.draw()
+        if not lost:
+        	ship.draw()
+        #ship.draw()
 
         pygame.display.update()
         clock.tick(60)
+
 run = True
 while run:
     if draw_state == 0:
         welcome_message()
-        
+
     if draw_state > 0:
         game()
         run = False
 
     for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
     pygame.display.update()
-
-
-# In[ ]:
-
-
-
-
