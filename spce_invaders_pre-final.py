@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-
+#Importin all required modules
 import pygame
 import time
 from time import sleep,time
@@ -10,18 +7,18 @@ import sys
 from os.path import abspath, dirname
 from random import choice
 
-# Initializing pygame modules
+global t
 width = 1024
 height = 720
-pygame.mixer.init(22100, -16, 2, 64)
-pygame.init()
+pygame.mixer.pre_init(44100, 16, 2, 4096)
+pygame.init() # Initializing pygame modules
 display = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Space Invaders")
 
 
 # Initialize required Variables here
-
+#ALl graphic variables assigned below
 spaceship = pygame.image.load("spaceship.png")
 spaceship = pygame.transform.scale(spaceship, (120, 120))
 alienship = pygame.image.load("alienface.png")
@@ -47,6 +44,7 @@ level = 1
 health = 4
 health_per = 100
 
+#ALL required sounds assigned below
 shoot_sound = pygame.mixer.Sound("shooter.ogg")
 shoot_sound.set_volume(0.8)
 
@@ -57,7 +55,8 @@ explode_sound = pygame.mixer.Sound("explosion.ogg")
 explode_sound.set_volume(0.8)
 
 
-# COLORS IN RGB YOU CAN MAKE COMBINATIONS LATER
+
+# COLORS IN RGB ER
 
 background = (74, 35, 90)
 red = (255, 0, 0)
@@ -72,6 +71,7 @@ blue = (0, 0, 255)
 gold = (230, 215, 0)
 black = (100, 100, 100)
 
+#ALL fonts mentioned below
 font = pygame.font.SysFont("verdana", 22)
 myfont = pygame.font.SysFont('verdana', 50)
 resetFont = pygame.font.SysFont('Comic Sans MS', 30)
@@ -110,7 +110,7 @@ class Bullet:
         self.x = x
         self.y = y
         self.d = 10
-        self.speed = -5
+        self.speed = -4
 
     def draw(self):
         pygame.draw.ellipse(display, orange, (self.x, self.y, self.d, self.d))
@@ -123,7 +123,7 @@ class Bullet:
             if y + d > self.y > y:
                 return True
 
-# Alien Battleship Movement
+# Alien backfire Movement
 
 class alienBullets:
     def __init__(self,x,y):
@@ -144,7 +144,7 @@ class alienBullets:
             if s_y + d > self.y and self.y > s_y:
                 return True
 
-
+#ALIENSHIP MOVEMENT
 class Alien:
     def __init__(self, x, y, d, speed):
         self.x = x
@@ -164,23 +164,17 @@ class Alien:
     def shift_down(self):
         self.y += self.d
 
-
-def saved():
-    # Result Declaration of the game
-    font = pygame.font.SysFont("verdana", 22)
-    font_large = pygame.font.SysFont("verdana", 43)
-    text2 = font_large.render(
-        "Congo,finally you aced at something!", True, white1)
-    display.blit(text2, (60, height/2))
-    pygame.display.update()
-
+#ALIEN SHOOT FUNCTION
 def alien_shoot(x,y):
+    global t
     global num_bullet_alien
     global alien_bullets
     j = alienBullets(x + 50, y)
     alien_bullets.append(j)
     num_bullet_alien += 1
+    t = pygame.time.get_ticks()
 
+#GAMEOVER function
 def GameOver():
     # Game over Recognition
     global alien_speed
@@ -209,7 +203,7 @@ def GameOver():
                 reset_game()
     pygame.display.update()
 
-
+#Game reset
 def reset_game():
     global lost
     global score
@@ -220,7 +214,7 @@ def reset_game():
     game()
 
 
-
+#INCREASES level on killing all aliens
 def increase_level():
     global alien_speed
     global invasion
@@ -231,7 +225,7 @@ def increase_level():
     invasion = False
     game()
 
-
+#ALiens create
 def alien_mov():
     global aliens
     global num_aliens
@@ -248,8 +242,9 @@ def alien_mov():
 
 
 def welcome_message():
-
+    #game welcome message
     global quit, draw_state
+
 
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
@@ -272,7 +267,11 @@ def welcome_message():
 
 
 def game():
+    #GAME START FUNCTION
     global invasion
+    global t
+    period = 380
+    t = 0
     invasion = False
     ship = SpaceShip(width//2-ship_width // 2, height -
                      ship_height, ship_width, ship_height)
@@ -305,6 +304,8 @@ def game():
     alien_mov()
     lost = False
 
+
+
     while not invasion:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -335,7 +336,7 @@ def game():
                     pygame.mixer.music.stop()
 
         display.fill(white1)
-
+        #DISPLAYS ALL PARAMETRES BELOW
         textsurface = font.render('Score:', False, green)
         display.blit(textsurface, (0, 0))
         textsurface = font.render(str(score), True, green)
@@ -359,6 +360,7 @@ def game():
         textsurface = font.render(str(level), True, black)
         display.blit(textsurface, (550, 0))
 
+        #SHOWS HEart as Lives
         for i in range(lives):
             if i == 0:
                 display.blit(heart,(0, 40))
@@ -366,17 +368,17 @@ def game():
                 display.blit(heart, (43, 40))
             elif i == 2:
                 display.blit(heart, (86, 40))
-
+        #Draws bullets on screen
         for i in range(num_bullet):
             bullets[i].draw()
             bullets[i].move()
-
+        #Draws alien bullets on screen
         for i in range(num_bullet_alien):
             alien_bullets[i].draw()
             alien_bullets[i].move()
 
 
-
+        #DraWS ALIENS loop
         for alien in list(aliens):
             alien.draw()
             alien.move()
@@ -389,7 +391,7 @@ def game():
                     aliens.remove(alien)
                     num_aliens -= 1
                     score += 10
-
+        #saving highest score 
         if score > highest_score:
             highest_score = score
             highest_score_file = open("highscore.txt", "w")
@@ -399,6 +401,7 @@ def game():
         if num_aliens == 0:
             increase_level()
             num_bullet = 0
+            period -= 30
             bullets = []
         if lives < 1:
             GameOver()
@@ -441,10 +444,12 @@ def game():
         if not lost:
             ship.draw()
 
+        n = pygame.time.get_ticks()
         for alien in list(aliens):
             if abs(alien.x - (ship.x + 50)) < 5:
-                alien_shoot(alien.x, alien.y)
-                break
+                if abs(t - n) >period:
+                    alien_shoot(alien.x, alien.y)
+                    break
                 
 
         for bul in list(alien_bullets):
