@@ -111,7 +111,7 @@ class Bullet:
         self.x = x
         self.y = y
         self.d = 10
-        self.speed = -5
+        self.speed = -4
 
     def draw(self):
         pygame.draw.ellipse(display, orange, (self.x, self.y, self.d, self.d))
