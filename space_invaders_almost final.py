@@ -13,7 +13,7 @@ from random import choice
 # Initializing pygame modules
 width = 1024
 height = 720
-pygame.mixer.init(22100, -16, 2, 64)
+pygame.mixer.pre_init(44100, 16, 2, 4096)
 pygame.init()
 display = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
@@ -55,6 +55,7 @@ fire_sound.set_volume(0.8)
 
 explode_sound = pygame.mixer.Sound("explosion.ogg")
 explode_sound.set_volume(0.8)
+
 
 
 # COLORS IN RGB YOU CAN MAKE COMBINATIONS LATER
@@ -250,6 +251,7 @@ def alien_mov():
 def welcome_message():
 
     global quit, draw_state
+
 
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
