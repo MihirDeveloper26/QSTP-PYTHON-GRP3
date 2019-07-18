@@ -46,7 +46,7 @@ health_per = 100
 
 #ALL required sounds assigned below
 shoot_sound = pygame.mixer.Sound("shooter.ogg")
-shoot_sound.set_volume(0.6)
+shoot_sound.set_volume(0.5)
 
 fire_sound = pygame.mixer.Sound("shoot.ogg")
 fire_sound.set_volume(0.6)
