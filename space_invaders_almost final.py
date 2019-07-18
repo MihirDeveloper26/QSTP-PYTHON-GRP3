@@ -114,7 +114,7 @@ class Bullet:
         self.speed = -5
 
     def draw(self):
-        pygame.draw.ellipse(display, green, (self.x, self.y, self.d, self.d))
+        pygame.draw.ellipse(display, orange, (self.x, self.y, self.d, self.d))
 
     def move(self):
         self.y += self.speed
