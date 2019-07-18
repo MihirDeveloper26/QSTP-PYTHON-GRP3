@@ -31,6 +31,8 @@ sh = display.get_height()
 x_increment = 30
 ship_height = spaceship.get_height()
 ship_width = spaceship.get_width()
+alien_height = alienship.get_height()
+alien_width = alienship.get_width()
 spaceship_y = sh - spaceship.get_height()
 spaceship_x = sw/2 - spaceship.get_width()/2
 alien_speed = 3
@@ -40,6 +42,8 @@ score = 0
 lost = False
 lives = 3
 level = 1
+health = 4
+health_per = 100
 
 shoot_sound = pygame.mixer.Sound("shooter.ogg")
 shoot_sound.set_volume(0.8)
@@ -119,6 +123,25 @@ class Bullet:
 
 # Alien Battleship Movement
 
+class alienBullets:
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+        self.d = 10
+        self.speed = 3
+
+    def draw(self):
+        pygame.draw.line(display, red, 
+            [self.x, self.y], [self.x, (self.y + d)],2)
+
+    def move(self):
+        self.y += self.speed
+
+    def hit(self,s_x,s_y,d):
+        if s_x < self.x and self.x< s_x + d:
+            if s_y + d > self.y and self.y > s_y:
+                return True
+
 
 class Alien:
     def __init__(self, x, y, d, speed):
@@ -182,8 +205,12 @@ def GameOver():
 def reset_game():
     global lost
     global score
+    global health, health_per
+    health = 3
+    health_per = 100
     alien_mov()
     game()
+
 
 
 def increase_level():
@@ -191,8 +218,8 @@ def increase_level():
     global invasion
     global level
     if alien_speed < 7:
-    	alien_speed += 1
-    	level += 1
+        alien_speed += 1
+        level += 1
     invasion = False
     game()
 
@@ -239,18 +266,24 @@ def welcome_message():
 def game():
     global invasion
     invasion = False
-    ship = SpaceShip(width/2-ship_width / 2, height -
+    ship = SpaceShip(width//2-ship_width // 2, height -
                      ship_height, ship_width, ship_height)
     move = False
     global score, highest_score
-    global lives, level
-    global bullets
+    global lives, level, health, health_per
+    global bullets, alien_bullets
     bullets = []
-    global num_bullet
+    alien_bullets = []
+    global num_bullet, num_bullet_alien
     num_bullet = 0
+    num_bullet_alien = 0
     for i in range(num_bullet):
         i = Bullet(width/2 - ship_width/2, height - ship_height - 20)
         bullets.append(i)
+
+    for i in range(num_bullet_alien):
+        i = alienBullets(200, 0)
+        alien_bullets.append(i)
 
     x_move = 0
 
@@ -288,8 +321,11 @@ def game():
                 if event.key == pygame.K_SPACE:
 
                     num_bullet += 1
+                    num_bullet_alien += 1
                     i = Bullet(ship.x + ship_width/2 - 5, ship.y)
                     bullets.append(i)
+                    j = alienBullets(200, 0)
+                    alien_bullets.append(j)
                     pygame.mixer.Sound.play(fire_sound)
                     pygame.mixer.music.stop()
 
@@ -300,28 +336,41 @@ def game():
         textsurface = font.render(str(score), True, green)
         display.blit(textsurface, (72, 0))
 
-        textsurface = font.render('High Score: ', False, blue)
-        display.blit(textsurface, (840, 0))
+        textsurface = font.render('High Score:', False, blue)
+        display.blit(textsurface, (800, 0))
 
         textsurface = font.render(str(highest_score), True, blue)
-        display.blit(textsurface, (980, 0))
+        display.blit(textsurface, (920, 0))
+
+        textsurface = font.render('Health:', False, green)
+        display.blit(textsurface, (800, 20))
+
+        textsurface = font.render(str(health_per), True, green)
+        display.blit(textsurface, (920, 20))
 
         textsurface = font.render('Level:', False, black)
         display.blit(textsurface, (480, 0))
+
         textsurface = font.render(str(level), True, black)
         display.blit(textsurface, (550, 0))
 
         for i in range(lives):
-        	if i == 0:
-        		display.blit(heart,(0, 40))
-        	elif i == 1:
-        		display.blit(heart, (43, 40))
-        	elif i == 2:
-        		display.blit(heart, (86, 40))
+            if i == 0:
+                display.blit(heart,(0, 40))
+            elif i == 1:
+                display.blit(heart, (43, 40))
+            elif i == 2:
+                display.blit(heart, (86, 40))
 
         for i in range(num_bullet):
             bullets[i].draw()
             bullets[i].move()
+
+        for i in range(num_bullet_alien):
+            alien_bullets[i].draw()
+            alien_bullets[i].move()
+
+
 
         for alien in list(aliens):
             alien.draw()
@@ -335,6 +384,7 @@ def game():
                     aliens.remove(alien)
                     num_aliens -= 1
                     score += 10
+
         if score > highest_score:
             highest_score = score
             highest_score_file = open("highscore.txt", "w")
@@ -367,7 +417,7 @@ def game():
                 # pygame.mixer.music.stop()
                 #lives -= 1
                 if lives < 1:
-                	
+                    
                     GameOver()
                     lost = True
                 else:
@@ -381,8 +431,18 @@ def game():
         if ship.x + ship_width > width:
             ship.x -= x_move
         if not lost:
-        	ship.draw()
+            ship.draw()
+
+        for bul in list(alien_bullets):
+            if bul.hit(ship.x,ship.y,120):
+                alien_bullets.remove(bul)
+                num_bullet_alien -= 1
+                health_per -= 25
+                health -= 1
         #ship.draw()
+        if health < 1:
+            lives -= 1
+            reset_game()
 
         pygame.display.update()
         clock.tick(60)
