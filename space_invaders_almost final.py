@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
 
 import pygame
+import time
+from time import sleep,time
 from pygame import *
 import sys
 from os.path import abspath, dirname
 from random import choice
-from pydub import AudioSegment
-from pydub.playback import play
 
 # Initializing pygame modules
 width = 1024
@@ -58,8 +56,6 @@ fire_sound.set_volume(0.8)
 explode_sound = pygame.mixer.Sound("explosion.ogg")
 explode_sound.set_volume(0.8)
 
-gameover_sound=pygame.mixer.Sound("gameover.ogg")
-gameover_sound.set_volume(0.8)
 
 # COLORS IN RGB YOU CAN MAKE COMBINATIONS LATER
 
@@ -134,7 +130,7 @@ class alienBullets:
         self.x = x
         self.y = y
         self.d = 10
-        self.speed = 4
+        self.speed = 3
 
     def draw(self):
         pygame.draw.line(display, red, 
@@ -178,21 +174,25 @@ def saved():
     display.blit(text2, (60, height/2))
     pygame.display.update()
 
+def alien_shoot(x,y):
+    global num_bullet_alien
+    global alien_bullets
+    j = alienBullets(x + 50, y)
+    alien_bullets.append(j)
+    num_bullet_alien += 1
 
 def GameOver():
-    # Game over
+    # Game over Recognition
     global alien_speed
     global score
     global lives
     global lost
-    pygame.mixer.Sound.play(gameover_sound)
-    pygame.mixer.music.stop()
     display.fill(white1)
     font = pygame.font.SysFont("verdana", 50)
     font_large = pygame.font.SysFont("verdana", 100)
     myfont = pygame.font.SysFont('verdana', 22)
-    text2 = font_large.render("Game Over!", True, red)
-    text = font.render("You Lost! You Suck!", True, red)
+    text2 = font_large.render("Game Over!", True, black)
+    text = font.render("You Lost! You Suck!", True, black)
     text3 = myfont.render('Press RETURN*', False, red)
     display.blit(text2, (250, 250))
     display.blit(text, (280, 400))
@@ -208,7 +208,8 @@ def GameOver():
                 lost = False
                 reset_game()
     pygame.display.update()
-    
+
+
 def reset_game():
     global lost
     global score
@@ -225,11 +226,8 @@ def increase_level():
     global invasion
     global level
     if alien_speed < 7:
-        alien_speed += 3
+        alien_speed += 1
         level += 1
-    else:
-        alien_speed+=2
-        level+=1
     invasion = False
     game()
 
@@ -260,6 +258,7 @@ def welcome_message():
 
     textsurface = myfont_win.render('Space Invaders', False, gold)
     display.blit(textsurface, (300, 200))
+
     if mouse[0] < 540 and mouse[0] > 390 and mouse[1] < 480 and mouse[1] > 400:
         pygame.draw.rect(display, green, (440, 400, 140, 70))
         if click[0]:
@@ -270,6 +269,7 @@ def welcome_message():
 
     textsurface = myfont.render('PLAY', False, white)
     display.blit(textsurface, (440, 400))
+
 
 def game():
     global invasion
@@ -290,7 +290,7 @@ def game():
         bullets.append(i)
 
     for i in range(num_bullet_alien):
-        i = alienBullets(200, 0)
+        i = alienBullets(alien.x, alien.y)
         alien_bullets.append(i)
 
     x_move = 0
@@ -329,11 +329,8 @@ def game():
                 if event.key == pygame.K_SPACE:
 
                     num_bullet += 1
-                    num_bullet_alien += 1
                     i = Bullet(ship.x + ship_width/2 - 5, ship.y)
                     bullets.append(i)
-                    j = alienBullets(200, 0)
-                    alien_bullets.append(j)
                     pygame.mixer.Sound.play(fire_sound)
                     pygame.mixer.music.stop()
 
@@ -344,22 +341,22 @@ def game():
         textsurface = font.render(str(score), True, green)
         display.blit(textsurface, (72, 0))
 
-        textsurface = font.render('High Score:', False, orange)
+        textsurface = font.render('High Score:', False, blue)
         display.blit(textsurface, (800, 0))
 
-        textsurface = font.render(str(highest_score), True, orange)
-        display.blit(textsurface, (940, 0))
+        textsurface = font.render(str(highest_score), True, blue)
+        display.blit(textsurface, (920, 0))
 
-        textsurface = font.render('Health:', False, red)
+        textsurface = font.render('Health:', False, green)
         display.blit(textsurface, (800, 20))
 
-        textsurface = font.render(str(health_per), True, red)
+        textsurface = font.render(str(health_per), True, green)
         display.blit(textsurface, (920, 20))
 
-        textsurface = font.render('Level:', False, gold)
+        textsurface = font.render('Level:', False, black)
         display.blit(textsurface, (480, 0))
 
-        textsurface = font.render(str(level), True, gold)
+        textsurface = font.render(str(level), True, black)
         display.blit(textsurface, (550, 0))
 
         for i in range(lives):
@@ -403,6 +400,9 @@ def game():
             increase_level()
             num_bullet = 0
             bullets = []
+        if lives < 1:
+            GameOver()
+            lost = True
 
         for i in range(num_aliens):
             if aliens[i].x + d >= width:
@@ -421,6 +421,9 @@ def game():
                     pygame.mixer.Sound.play(explode_sound)
                     pygame.mixer.music.stop()
                     lives -= 1
+                # pygame.mixer.Sound.play(explode_sound)
+                # pygame.mixer.music.stop()
+                #lives -= 1
                 if lives < 1:
                     
                     GameOver()
@@ -437,6 +440,12 @@ def game():
             ship.x -= x_move
         if not lost:
             ship.draw()
+
+        for alien in list(aliens):
+            if abs(alien.x - (ship.x + 50)) < 5:
+                alien_shoot(alien.x, alien.y)
+                break
+                
 
         for bul in list(alien_bullets):
             if bul.hit(ship.x,ship.y,120):
@@ -466,10 +475,3 @@ while run:
             pygame.quit()
             sys.exit()
     pygame.display.update()
-
-
-# In[ ]:
-
-
-
-

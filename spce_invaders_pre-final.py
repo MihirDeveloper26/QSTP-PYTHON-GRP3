@@ -3,6 +3,8 @@
 
 
 import pygame
+import time
+from time import sleep,time
 from pygame import *
 import sys
 from os.path import abspath, dirname
@@ -172,6 +174,12 @@ def saved():
     display.blit(text2, (60, height/2))
     pygame.display.update()
 
+def alien_shoot(x,y):
+    global num_bullet_alien
+    global alien_bullets
+    j = alienBullets(x + 50, y)
+    alien_bullets.append(j)
+    num_bullet_alien += 1
 
 def GameOver():
     # Game over Recognition
@@ -282,7 +290,7 @@ def game():
         bullets.append(i)
 
     for i in range(num_bullet_alien):
-        i = alienBullets(200, 0)
+        i = alienBullets(alien.x, alien.y)
         alien_bullets.append(i)
 
     x_move = 0
@@ -321,11 +329,8 @@ def game():
                 if event.key == pygame.K_SPACE:
 
                     num_bullet += 1
-                    num_bullet_alien += 1
                     i = Bullet(ship.x + ship_width/2 - 5, ship.y)
                     bullets.append(i)
-                    j = alienBullets(200, 0)
-                    alien_bullets.append(j)
                     pygame.mixer.Sound.play(fire_sound)
                     pygame.mixer.music.stop()
 
@@ -395,6 +400,9 @@ def game():
             increase_level()
             num_bullet = 0
             bullets = []
+        if lives < 1:
+            GameOver()
+            lost = True
 
         for i in range(num_aliens):
             if aliens[i].x + d >= width:
@@ -432,6 +440,12 @@ def game():
             ship.x -= x_move
         if not lost:
             ship.draw()
+
+        for alien in list(aliens):
+            if abs(alien.x - (ship.x + 50)) < 5:
+                alien_shoot(alien.x, alien.y)
+                break
+                
 
         for bul in list(alien_bullets):
             if bul.hit(ship.x,ship.y,120):
