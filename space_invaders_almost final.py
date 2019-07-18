@@ -39,7 +39,7 @@ alien_height = alienship.get_height()
 alien_width = alienship.get_width()
 spaceship_y = sh - spaceship.get_height()
 spaceship_x = sw/2 - spaceship.get_width()/2
-alien_speed = 2
+alien_speed = 3
 global score, highest_score
 draw_state = 0
 score = 0
@@ -134,7 +134,7 @@ class alienBullets:
         self.x = x
         self.y = y
         self.d = 10
-        self.speed = 3
+        self.speed = 4
 
     def draw(self):
         pygame.draw.line(display, red, 
@@ -227,6 +227,9 @@ def increase_level():
     if alien_speed < 7:
         alien_speed += 3
         level += 1
+    else:
+        alien_speed+=2
+        level+=1
     invasion = False
     game()
 
