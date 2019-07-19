@@ -346,13 +346,13 @@ def game():
         display.blit(textsurface, (800, 0))
 
         textsurface = font.render(str(highest_score), True, blue)
-        display.blit(textsurface, (920, 0))
+        display.blit(textsurface, (950, 0))
 
         textsurface = font.render('Health:', False, green)
         display.blit(textsurface, (800, 20))
 
         textsurface = font.render(str(health_per), True, green)
-        display.blit(textsurface, (920, 20))
+        display.blit(textsurface, (900, 20))
 
         textsurface = font.render('Level:', False, black)
         display.blit(textsurface, (480, 0))
