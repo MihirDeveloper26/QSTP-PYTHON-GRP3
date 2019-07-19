@@ -357,7 +357,7 @@ def game():
         textsurface = font.render('Level:', False, black)
         display.blit(textsurface, (480, 0))
 
-        textsurface = font.render(str(level), True, black)
+        textsurface = font.render(str(int((score/80)+1)), True, black)
         display.blit(textsurface, (550, 0))
 
         #SHOWS HEart as Lives
